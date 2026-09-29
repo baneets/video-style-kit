@@ -32,7 +32,7 @@ DEFAULT = {
             "min_shot_s": 0.2},
     "punch_in": {"every": 0, "zoom": 1.1},                          # every N-th shot pushed in; 0 = off
     "captions": {**copy.deepcopy(TEXT), "enabled": True, "y": 0.7, "words_per_row": 3, "mode": "row",
-                 "highlight": None, "avoid_face": True},
+                 "highlight": None, "avoid_face": True, "lines": 1},
     "hook": {**copy.deepcopy(TEXT), "enabled": False, "y": 0.22, "size": 0.055, "hold_s": 3.0,
              "box": {"color": "#FFFFFF", "opacity": 1.0, "padding": 0.22, "radius": 0.2}, "color": "#111111",
              "shadow": 0.0},
@@ -267,9 +267,18 @@ def derive(deeps: list[dict], colour: dict | None, audio: list[dict]) -> tuple[d
         grow = sum(1 for e in caps if len(e.get("text_events", [])) > 1 and
                    all(b["text"].startswith(a["text"].rstrip()) for a, b in zip(e["text_events"], e["text_events"][1:])))
         capd["mode"] = "reveal" if grow >= 0.3 * len(caps) else "row"
+        stacked = []                    # caption lines on screen together, one above the other = lines per page
+        for e in caps:
+            mid = (e["life"]["t_on"] + e["life"]["t_off"]) / 2
+            h = e["box_rest"]["h"]
+            stacked.append(1 + sum(1 for o in caps if o is not e and o["life"]["t_on"] <= mid <= o["life"]["t_off"]
+                                   and 0.5 * h < abs(o["box_rest"]["y"] - e["box_rest"]["y"]) < 2.6 * h))
+        capd["lines"] = int(_clip(round(_med(stacked, 1)), 1, 3))
+        if capd["lines"] > 1:
+            capd["y"] = round(_med([(e["box_rest"]["y"] + e["box_rest"]["h"] / 2) / 100 for e in caps]), 3)
         prov["captions"] = (f"measured: {len(caps)} caption elements (text that matched the spoken words), on screen "
                             f"{cap_s:.0f}s of {spoken_s:.0f}s speech; position/size/case/motion are their medians; "
-                            f"words_per_row = median words shown at once; mode {capd['mode']!r}")
+                            f"words_per_row = median words on one line; lines = lines shown together; mode {capd['mode']!r}")
     else:
         prov["captions"] = "measured: no burned-in captions found in the references (enabled=false)"
     r["captions"] = capd

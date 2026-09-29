@@ -127,7 +127,7 @@ def write_docs(sdir: Path, display: str, refs: list[dict], notes: str) -> None:
         sp.write_text(s)
 
 
-def scan(refs: list[str], name: str, gemini: bool = False, max_seconds: float = 240.0, cookies: str | None = None,
+def scan(refs: list[str], name: str, gemini: bool = False, max_seconds: float = 120.0, cookies: str | None = None,
          notes: str = "") -> Path:
     t_start = time.time()
     slug = paths.slug(name)
@@ -163,7 +163,7 @@ def scan(refs: list[str], name: str, gemini: bool = False, max_seconds: float = 
         else:
             info = media.probe(v)
             print(f"  {row['id']}: measuring {v.name} ({info['duration']:.0f}s, {info['width']}x{info['height']}) "
-                  f"— every frame, on this Mac; about {max(1, int(min(info['duration'], max_seconds) * 12 / 60))} min")
+                  f"— every frame, on this Mac; about {max(1, round(min(info['duration'], max_seconds) * 14 / 60))} min")
             d, a = vdeep.analyze(str(v), row["id"], max_seconds=max_seconds, use_gemini=gemini,
                                  log=lambda m, i=row["id"]: print(f"    {i}: {m}", flush=True))
             dp.write_text(json.dumps(d, indent=1))

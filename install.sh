@@ -125,7 +125,7 @@ if [ "$MCP" = 1 ]; then
   else
     MCPD="$KIT/vendor/davinci-resolve-mcp"
     if [ ! -d "$MCPD/.git" ]; then
-      git clone -q --depth 1 --branch v4.7.10 https://github.com/samuelgursky/davinci-resolve-mcp.git "$MCPD"
+      git -c advice.detachedHead=false clone -q --depth 1 --branch v4.7.10 https://github.com/samuelgursky/davinci-resolve-mcp.git "$MCPD"
     fi
     [ -x "$MCPD/venv/bin/python" ] || "$PY" -m venv "$MCPD/venv"
     "$MCPD/venv/bin/python" -m pip install -q --upgrade pip

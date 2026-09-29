@@ -943,14 +943,20 @@ def text_track(frames: np.ndarray, bg: np.ndarray, tx: dict, every_s: float) -> 
 # 7. words (mlx-whisper)
 # =====================================================================================
 
-def transcribe(video: str, log: Log) -> list[dict]:
+def transcribe(video: str, log: Log, max_seconds: float | None = None) -> list[dict]:
     try:
         import mlx_whisper
     except ImportError:
         log("mlx_whisper not installed; no transcript")
         return []
     log("transcribing (mlx-whisper large-v3-turbo, on-device)")
-    r = mlx_whisper.transcribe(video, path_or_hf_repo="mlx-community/whisper-large-v3-turbo", word_timestamps=True)
+    src = video
+    if max_seconds:                                   # only the measured window: a long reference is not heard in full
+        tmp = Path(tempfile.mkdtemp()) / "window.wav"
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-t", f"{max_seconds}", "-i", video, "-vn", "-ac", "1", "-ar", "16000",
+                        str(tmp)], check=True)
+        src = str(tmp)
+    r = mlx_whisper.transcribe(src, path_or_hf_repo="mlx-community/whisper-large-v3-turbo", word_timestamps=True)
     segs = []
     for sgm in r.get("segments", []):
         segs.append({"start_time": _r(sgm["start"]), "end_time": _r(sgm["end"]), "text": sgm["text"].strip(),
@@ -1210,14 +1216,14 @@ def analyze(video: str, name: str | None = None, max_seconds: float = 240.0, ocr
     elements.sort(key=lambda e: e["life"]["t_on"])
     for i, el in enumerate(elements):
         el["id"] = f"e{i + 1}"
-    transcript = transcribe(video, log)
+    transcript = transcribe(video, log, dur)
     dens = density(elements, shots, dur)
     tr = tier(dens, layers, elements)
     from .broll_local import silence_cuts_local
     deep = {"schema": "deep/1", "built_at": _now(), "source": video, "name": name or Path(video).stem,
             "metadata": {"total_duration_seconds": _r(dur), "analyzed_seconds": _r(dur), "fps": FPS, "width": info["width"], "height": info["height"],
                          "aspect_ratio": "9:16" if info["height"] > info["width"] else "16:9", "person_mask": masks is not None},
-            "shots": shots, "elements": elements, "transcript": transcript, "silence_cuts": silence_cuts_local(video), "density": dens,
+            "shots": shots, "elements": elements, "transcript": transcript, "silence_cuts": silence_cuts_local(video, max_seconds=dur), "density": dens,
             "tier_measured": tr, "beats": beats(elements, transcript), "ocr_samples": len(ocr), "seconds_to_measure": _r(time.time() - t0, 1)}
     if use_gemini:
         try:

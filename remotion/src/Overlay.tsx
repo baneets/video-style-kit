@@ -26,6 +26,8 @@ export type Row = { start: number; end: number; words: Word[]; y?: number };
 export type CaptionStyle = TextStyle & {
   y: number;
   mode?: "row" | "reveal";
+  lines?: number; // rows shown at once (a "page"); words_per_line words on each
+  words_per_line?: number;
   highlight?: { color?: string | null; box_color?: string | null; scale?: number } | null;
 };
 export type TextItem = { text: string; start: number; end: number; y: number; x?: number; style: TextStyle };
@@ -161,7 +163,9 @@ export const Overlay: React.FC<OverlayProps> = ({ captions, texts }) => {
                   >
                     {applyCase(w.text, cs.case)}
                   </span>
-                  {i < row.words.length - 1 ? " " : ""}
+                  {i < row.words.length - 1
+                    ? (cs.lines ?? 1) > 1 && cs.words_per_line && (i + 1) % cs.words_per_line === 0 ? <br /> : " "
+                    : ""}
                 </React.Fragment>
               );
             })

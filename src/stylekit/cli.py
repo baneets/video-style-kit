@@ -103,7 +103,7 @@ def main(argv=None):
     s.add_argument("--notes", help="your own words about the style (saved into STYLE.md)")
     s.add_argument("--gemini", action="store_true", help="also let Gemini name the elements (needs GEMINI_API_KEY; costs a few cents)")
     s.add_argument("--cookies", help="browser to borrow a login from for downloads, e.g. chrome (Instagram needs it)")
-    s.add_argument("--max-seconds", type=float, default=240.0, help="measure at most this much of each reference")
+    s.add_argument("--max-seconds", type=float, default=120.0, help="measure at most this much of each reference (the opening, where a style shows itself)")
     s.set_defaults(fn=cmd_scan)
 
     s = sub.add_parser("styles", help="list styles")

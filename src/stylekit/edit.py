@@ -173,7 +173,17 @@ def edit(files: list[str], style: str, name: str | None = None, keep: str | None
     # caption words: re-transcribe what the cut actually sounds like (source-file word times drift on long takes)
     ew = mapped
     try:
+        (work / "cut.words.json").unlink(missing_ok=True)
         heard = W.transcribe(assemble_audio(plan, work / "cut.wav"), work / "cut.words.json")
+        # HEAR the first word: source word times run early, so a start placed after "but" can still open on it
+        first = plan.ranges[0]
+        if len(heard) > 3 and W.bare(heard[0]["word"]) in C.CONNECTORS and heard[1]["start"] - 0.04 < first.dur - 0.3:
+            d = max(heard[0]["end"], heard[1]["start"] - 0.04)
+            first.t0 += d
+            print(f"  opening word {heard[0]['word']!r} heard at the start; the video now starts on {heard[1]['word']!r}")
+            heard = [{**w, "start": round(w["start"] - d, 3), "end": round(w["end"] - d, 3)} for w in heard[1:]]
+            mapped = C.edit_words(plan)
+            (work / "plan.json").write_text(json.dumps(plan.to_json(), indent=1))
         if len(heard) >= 0.6 * len(mapped):
             ew = heard
     except Exception as ex:                                  # noqa: BLE001

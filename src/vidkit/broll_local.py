@@ -241,11 +241,11 @@ def derive(data: dict, video: str, log=None) -> list[dict]:
     return out
 
 
-def silence_cuts_local(video: str, min_gap: float = 0.25, noise_db: float = -35.0) -> list[dict]:
+def silence_cuts_local(video: str, min_gap: float = 0.25, noise_db: float = -35.0, max_seconds: float | None = None) -> list[dict]:
     """ffmpeg silencedetect: the audible gaps between speech, no API tokens. Same shape as the structure pass."""
     import re
     import subprocess
-    r = subprocess.run(["ffmpeg", "-v", "info", "-i", video, "-af", f"silencedetect=noise={noise_db}dB:d={min_gap}",
+    r = subprocess.run(["ffmpeg", "-v", "info", *(["-t", f"{max_seconds}"] if max_seconds else []), "-i", video, "-af", f"silencedetect=noise={noise_db}dB:d={min_gap}",
                         "-f", "null", "-"], capture_output=True, text=True)
     starts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", r.stderr)]
     ends = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", r.stderr)]

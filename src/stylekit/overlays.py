@@ -70,12 +70,14 @@ def build_props(recipe: dict, width: int, height: int, fps: int, n_frames: int, 
     cap = recipe["captions"]
     cap_props = None
     if captions and cap.get("enabled", True):
-        rows = W.caption_rows(edit_words, int(cap.get("words_per_row", 3)))
+        lines = max(1, int(cap.get("lines", 1) or 1))
+        rows = W.caption_rows(edit_words, int(cap.get("words_per_row", 3)) * lines)
         if hook:                                   # captions never fight the hook title for the first seconds
             y_gap = abs(float(cap["y"]) - float(hk["y"]))
             if y_gap < 0.12:
                 rows = [r for r in rows if r["start"] >= texts[0]["end"]]
         cap_props = {"style": {**text_style(cap), "y": float(cap["y"]), "mode": cap.get("mode", "row"),
+                               "lines": lines, "words_per_line": int(cap.get("words_per_row", 3)),
                                "highlight": cap.get("highlight")}, "rows": rows}
     return {"width": width, "height": height, "fps": fps, "durationInFrames": n_frames, "captions": cap_props, "texts": texts,
             "hook_first": bool(hook)}
@@ -110,23 +112,31 @@ def avoid_faces(props: dict, bands: list[tuple[float, float, float, float]]) -> 
         return 0
     n = 0
 
-    def place(y: float, size: float, start: float) -> float | None:
-        half = size * 0.75                               # half the line's height, plus a little air
-        b = next((b for b in bands if b[0] <= start < b[1]), None)
-        if not b or y + half < b[2] or y - half > b[3]:
+    def place(y: float, size: float, start: float, end: float | None = None, prefer_above: bool = False) -> float | None:
+        half = size * 0.75                               # half the text block's height, plus a little air
+        t_end = end if end is not None else start + 1e-3
+        hit = [b for b in bands if b[0] < t_end and start < b[1] and not (y + half < b[2] or y - half > b[3])]
+        if not hit:
             return None
-        below, above = b[3] + half + 0.02, b[2] - half - 0.02
-        return round(below if below <= 0.9 else max(0.08, above), 4)
+        top, bottom = min(b[2] for b in hit), max(b[3] for b in hit)
+        below, above = bottom + half + 0.02, top - half - 0.02
+        if prefer_above and above >= 0.06:
+            return round(above, 4)
+        return round(below if below <= 0.9 else max(0.06, above), 4)
 
     cap = props.get("captions")
     if cap:
+        lines = int(cap["style"].get("lines", 1) or 1)
         for row in cap["rows"]:
-            y = place(float(cap["style"]["y"]), float(cap["style"]["size"]), row["start"])
+            y = place(float(cap["style"]["y"]), float(cap["style"]["size"]) * lines, row["start"])
             if y is not None:
                 row["y"] = y
                 n += 1
-    for t in props.get("texts", [])[1 if props.get("hook_first") else 0:]:
-        y = place(float(t["y"]), float(t["style"]["size"]) * max(1, len(t["text"]) // 18 + 1), t["start"])
+    for i, t in enumerate(props.get("texts", [])):
+        is_hook = i == 0 and props.get("hook_first")
+        # a text that stays up across several pieces must clear the face in all of them (the hook usually does)
+        y = place(float(t["y"]), float(t["style"]["size"]) * max(1, len(t["text"]) // 18 + 1), t["start"], t["end"],
+                  prefer_above=is_hook or float(t["y"]) < 0.4)
         if y is not None:
             t["y"] = y
             n += 1
