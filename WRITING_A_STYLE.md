@@ -22,7 +22,11 @@ For `captions`, `hook` and `titles` (only the parts the references use):
   otherwise `null`.
 - Keep the measured `y`, `size`, `words_per_row`, `mode`, `enter`, `exit` unless the sheets clearly contradict them
   (OCR can mistake a sticker or a screenshot for text: judge from `text.jpg`).
-- `hook.enabled`: true only if the references open on a title that is not a caption.
+- `hook.enabled`: true only if the references open on a title that is not a caption. If it stays up for the whole
+  video, set `hook.hold_s` longer than any video (e.g. 600); the scan may read it shorter when a cut hid it briefly.
+- `captions.case`: OCR reads "lower" when most caption words are lower case; if the sheets show normal sentence case,
+  set `"as-is"` (the words then appear as spoken, with capitals).
+- `captions.lines` (lines shown together) and `words_per_row` (words per line): check against `text.jpg`.
 
 Then check your numbers against the references:
 ```bash

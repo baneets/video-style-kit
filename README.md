@@ -37,6 +37,9 @@ editor left, the colour (black/mid/white per channel, saturation), and whether m
 far under. Claude then looks at contact sheets of the reference to name the font and colours, checks its numbers by
 drawing its captions over the reference frame, and writes the style out in words (`STYLE.md`).
 
+Scanning runs on the Mac and takes about 12-15 s per second of reference (a 30 s reel: ~7 min; a long video is
+measured over its first 120 s unless you ask for more).
+
 ## What an edit does
 
 1. levels the voice and transcribes it (mlx-whisper, on-device)

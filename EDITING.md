@@ -76,7 +76,9 @@ about real time.
 ## 5. Look before handing it over
 
 - Open the review sheet it prints (`review.jpg`): frames across the video. Check the captions sit where the style
-  puts them, never over the face, the hook is readable, the framing keeps the face in.
+  puts them, never over the face (lines that would cover it are moved automatically), the hook is readable, the
+  framing keeps the face in.
+- The editor LISTENS to the finished cut: if the first word heard is "but"/"so"/"um" it starts on the next word.
 - Read the `PROBLEMS:` line if one is printed (length, size or loudness off) and fix before delivering.
 - Check the first frame is the first word and the last line is complete (`cut_transcript.txt`).
 
@@ -101,8 +103,8 @@ under "The user's own rules". Never keep a correction only in the conversation.
 | `cut.j_cut_s` | the next line's voice starts this much before its picture |
 | `cut.tail_hold_s` | room tone held after the last word |
 | `punch_in.every` / `.zoom` | every Nth piece pushed in by `zoom` (0 = never) |
-| `captions.*` | font, weight, size (fraction of frame height), y (0 top, 1 bottom), colour, stroke, box, case, words_per_row, mode (`row` or `reveal`), highlight of the spoken word, enter/exit motion |
-| `hook.*` / `titles.*` | same text keys, plus `hold_s` |
+| `captions.*` | font, weight, size (fraction of frame height), y (0 top, 1 bottom), colour, stroke, box, case, words_per_row (words on one line), lines (lines shown together), mode (`row` or `reveal` word by word), highlight of the spoken word, enter/exit motion, avoid_face (move a line off the face) |
+| `hook.*` / `titles.*` | same text keys, plus `hold_s` (a hook that stays the whole video: set it longer than the video, e.g. 600) |
 | `grade.mode` / `.strength` | `match` = footage colour matched to the references (0-1 strength), `none` = untouched |
 | `audio.*` | voice level, final loudness, music level under the voice, fades |
 

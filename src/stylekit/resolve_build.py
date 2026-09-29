@@ -48,11 +48,33 @@ def connect(wait_s: float = 0.0):
         time.sleep(2)
 
 
-def launch_and_connect(wait_s: float = 90.0):
+STATUS = paths.WORK / "resolve_status.json"
+
+
+def _running() -> bool:
+    import subprocess
+    return subprocess.run(["pgrep", "-f", "DaVinci Resolve.app/Contents/MacOS/Resolve"], capture_output=True).returncode == 0
+
+
+def launch_and_connect(wait_s: float = 90.0, force: bool = False):
+    """Connect, starting Resolve when it is closed. When Resolve runs but never answers (the free edition, or external
+    scripting switched off) that is remembered, so later edits do not wait for it again (force=True retries)."""
+    import json
     r = connect()
-    if r is None and Path("/Applications/DaVinci Resolve/DaVinci Resolve.app").exists():
+    if r is not None:
+        STATUS.unlink(missing_ok=True)
+        return r
+    app = Path("/Applications/DaVinci Resolve/DaVinci Resolve.app")
+    if not app.exists():
+        return None
+    if not force and STATUS.exists() and json.loads(STATUS.read_text()).get("scripting") is False:
+        return None
+    if not _running():
         os.system('open -a "DaVinci Resolve"')
-        r = connect(wait_s)
+    r = connect(wait_s)
+    if r is None and _running():
+        STATUS.parent.mkdir(parents=True, exist_ok=True)
+        STATUS.write_text(json.dumps({"scripting": False, "checked": time.strftime("%Y-%m-%d %H:%M")}))
     return r
 
 
@@ -162,7 +184,7 @@ def build(r, job: dict) -> dict:
     r.OpenPage("edit")
     pm = r.GetProjectManager()
     pm.SaveProject()
-    return {"project": p, "timeline": tl, "graded": graded, "pieces": len(vids)}
+    return {"project": p, "name": p.GetName(), "timeline": tl, "graded": graded, "pieces": len(vids)}
 
 
 def render(p, tl, out_dir: Path, name: str, w: int, h: int) -> Path:

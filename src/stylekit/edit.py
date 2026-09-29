@@ -294,22 +294,21 @@ def edit(files: list[str], style: str, name: str | None = None, keep: str | None
     # 7. build + render
     out_dir = paths.EXPORTS / slug
     out_dir.mkdir(parents=True, exist_ok=True)
-    used, raw, resolve_note = "headless", None, ""
+    used, raw, resolve_note, resolve_project = "headless", None, "", None
     if engine in ("auto", "resolve"):
-        r = RB.launch_and_connect() if engine == "resolve" else RB.connect()
-        if r is None and engine == "auto":
-            r = RB.launch_and_connect(60)
+        r = RB.launch_and_connect(90, force=engine == "resolve")
         if RB.is_studio(r):
             print("  building the timeline in DaVinci Resolve Studio")
             job_r = dict(job)
             job_r["fps"] = rate_label
             built = RB.build(r, job_r)
-            print(f"  Resolve: project {job['project']!r}, {built['pieces']} pieces, {built['graded']} graded; rendering")
+            print(f"  Resolve: project {built['name']!r}, {built['pieces']} pieces, {built['graded']} graded; rendering")
+            resolve_project = built["name"]
             raw = RB.render(built["project"], built["timeline"], work, name, out_w, out_h)
             used = "resolve"
         else:
-            resolve_note = ("DaVinci Resolve Studio is not reachable (not installed, not running, the free edition, or "
-                            "external scripting is off in Preferences > System > General)")
+            resolve_note = ("DaVinci Resolve Studio is not reachable (not installed, the free edition, or external "
+                            "scripting is off in Preferences > System > General; after fixing it run once with --engine resolve)")
             if engine == "resolve":
                 raise SystemExit(resolve_note)
             print(f"  {resolve_note}; rendering the same edit headless with ffmpeg")
@@ -321,7 +320,8 @@ def edit(files: list[str], style: str, name: str | None = None, keep: str | None
     got = media.probe(final)
     loud = media.lufs(final)
     sheet = review_sheet(final, work / "review.jpg")
-    report = {"output": str(final), "engine": used, "resolve_note": resolve_note or None, "style": slug,
+    report = {"output": str(final), "engine": used, "resolve_project": resolve_project, "resolve_note": resolve_note or None,
+              "style": slug,
               "length_s": round(got["duration"], 2), "expected_s": round(plan.n_frames / fps, 2),
               "size": f"{got['width']}x{got['height']}", "fps": rate_label, "lufs": loud, "pieces": len(ranges),
               "removed": plan.removed, "broll": len(broll_rows), "titles": len(title_rows), "hook": hook,

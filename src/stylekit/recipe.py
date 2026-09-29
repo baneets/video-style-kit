@@ -201,6 +201,9 @@ def _text_block(els: list[dict]) -> dict:
     cases = Counter((e.get("typography") or {}).get("case", "mixed") for e in els)
     case = cases.most_common(1)[0][0]
     case = {"upper": "upper", "lower": "lower", "title": "title"}.get(case, "as-is")
+    caps_start = sum(1 for e in els if (e.get("text") or " ")[:1].isupper()) / max(1, len(els))
+    if case == "lower" and caps_start > 0.15:     # sentence case read line by line looks "lower" most of the time
+        case = "as-is"
     size = _med(hs, 0.05)
     size = round(size * (1.25 if case == "upper" else 0.95), 4)       # OCR box = cap height for CAPS, x-height+ascenders otherwise
     return {"y": _med(ys, 0.7), "size": round(_clip(size, 0.015, 0.2), 4), "case": case,

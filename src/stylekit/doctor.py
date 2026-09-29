@@ -80,6 +80,7 @@ def run(fix_hint: bool = True) -> bool:
             _line(WARN, f"DaVinci Resolve {ver}", "installed but not reachable right now: open it, and set Preferences > System > "
                   "General > External scripting using = Local, then run doctor again (edits still work headless)")
         elif RB.is_studio(r):
+            RB.STATUS.unlink(missing_ok=True)
             _line(OK, f"DaVinci Resolve {ver}", f"{r.GetProductName()} scripting connected: edits build real timelines")
         else:
             _line(WARN, f"DaVinci Resolve {ver}", f"{r.GetProductName()}: the free edition has no scripting; edits render headless "
