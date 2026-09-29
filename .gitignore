@@ -1,0 +1,22 @@
+# your own material never leaves your Mac
+styles/*
+!styles/README.md
+exports/
+.work/
+vendor/
+
+# generated on install
+.venv/
+tools/ocr
+tools/personmatte
+skills/scan-video-style/SKILL.md
+remotion/node_modules/
+remotion/out/
+
+# system / editor
+.DS_Store
+__pycache__/
+*.egg-info/
+*.pyc
+.env
+*.log

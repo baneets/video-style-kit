@@ -1,0 +1,30 @@
+[project]
+name = "video-style-kit"
+version = "1.0.0"
+description = "Scan any reference video into a reusable editing style, then edit your own footage in it with Claude Code, DaVinci Resolve and Remotion."
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "numpy>=1.26,<3",
+  "opencv-python-headless>=4.9,<5",
+  "mlx-whisper>=0.4",
+  "pillow>=10",
+  "yt-dlp>=2025.1.1",
+]
+
+[project.optional-dependencies]
+# Optional second opinion on a scan: Gemini names what the pixels measured (needs GEMINI_API_KEY).
+gemini = ["google-genai>=1", "pydantic>=2"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+stylekit = "stylekit.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

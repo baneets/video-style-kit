@@ -1,0 +1,38 @@
+---
+name: scan-video-style
+description: Turn any reference video into a reusable editing style, then edit the user's own footage in it with DaVinci Resolve (and Remotion for text). Use when the user drops a video file or link and says "scan this video", "make this a style", "edit like this", "I want my videos to look like this", "copy this editing style", "save this as a style", names a creator whose editing they want, or asks to edit footage in a style that does not exist yet. Measures the reference frame by frame on the Mac (cuts, pacing, caption position/size/motion, hook, punch-ins, colour, music level), writes the style's numbers and a new /style-<name> skill, and then edits their footage in that style.
+---
+
+# Scan a video into a style
+
+The kit is at `{{KIT}}`; its command is `{{KIT}}/.venv/bin/stylekit`.
+
+## 1. Scan
+
+Ask only for what is missing: the reference (file path or link) and a name for the style. Everything else is measured.
+Any notes the user gives about the style go in `--notes` word for word.
+
+```bash
+{{KIT}}/.venv/bin/stylekit scan "<file or link>" [more references...] --name "<style name>" [--notes "..."]
+```
+- One reference works; 3-5 make the numbers medians instead of single readings (say which you had).
+- Links: YouTube works as is. Instagram/TikTok usually need a login: add `--cookies chrome` (or safari/firefox), or
+  ask the user to download the video and pass the file.
+- Time: about 10-15 s of Mac time per second of reference (a 30 s reel is ~5-7 min; long videos measure the first
+  240 s unless `--max-seconds` says otherwise). Run it in the background and tell the user it is working.
+- Cost: free; everything runs on the Mac. `--gemini` adds an optional naming pass (needs `GEMINI_API_KEY`, a few cents).
+
+## 2. Finish the style (you look at it)
+
+Follow `{{KIT}}/WRITING_A_STYLE.md`: read the contact sheets, set the font/colours in `recipe.json`, check them with
+`stylekit calibrate <style>`, and write `STYLE.md`. The scan created the skill link `~/.claude/skills/style-<style>`;
+new sessions list it as `/style-<style>`.
+
+## 3. Edit their footage in it
+
+If they gave footage (now or later), follow `{{KIT}}/EDITING.md` with `--style <style>`.
+
+## If something fails
+
+`{{KIT}}/.venv/bin/stylekit doctor` names every missing piece and the command that fixes it. Setup from scratch:
+`{{KIT}}/SETUP.md`.
