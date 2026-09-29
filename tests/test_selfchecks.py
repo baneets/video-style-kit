@@ -1,4 +1,7 @@
-"""Fast checks (no media, no Resolve): every module's own self-check.  .venv/bin/python -m pytest tests"""
+"""Fast checks (no media, no Resolve): every module's own self-check.
+
+  .venv/bin/pip install pytest && .venv/bin/python -m pytest tests/test_selfchecks.py
+"""
 import runpy
 
 import pytest
